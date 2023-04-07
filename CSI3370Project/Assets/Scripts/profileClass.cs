@@ -2,22 +2,30 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class profileClass : MonoBehaviour
+public class ProfileClass
 {
     public string profileName;
-    public string avatar;
-    public string background;
+    public int avatar;
+    public int background;
+
+    //default constructor
+    public ProfileClass(string newName, int newAvatar, int newBackground)
+    {
+        profileName = newName;
+        avatar = newAvatar;
+        background = newBackground;
+    }
 
     //Setters
     public void setName(string newName)
     {
         profileName = newName;
     }
-    public void setAvatar(string newAvatar)
+    public void setAvatar(int newAvatar)
     {
         avatar = newAvatar;
     }
-    public void setBackground(string newBackground)
+    public void setBackground(int newBackground)
     {
         background = newBackground;
     }
@@ -27,11 +35,11 @@ public class profileClass : MonoBehaviour
     {
         return profileName;
     }
-    public string getAvatar()
+    public int getAvatar()
     {
         return avatar;
     }
-    public string getBackground()
+    public int getBackground()
     {
         return background;
     }
