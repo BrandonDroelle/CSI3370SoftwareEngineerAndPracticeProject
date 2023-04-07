@@ -6,13 +6,14 @@ using TMPro;
 
 public class profileButtons : MonoBehaviour
 {
+    //public attributes
+    public List<ProfileClass> profileList = new List<ProfileClass>();   //creates a list of profileClass objects
+    public int profileIndex = 0;            //holds index for current class
+    public int numOfProfiles = 0;           //counts number of profiles
 
-    //public ProfileClass[] profileList = new ProfileClass[99];       //creates list for profile class objects
-    public List<ProfileClass> profileList = new List<ProfileClass>();
-
-    public string theText;                  //contain the profiles name
-    public GameObject theTextBox;           //contains the text box
-    public GameObject ourNote;              //holds the profiles name
+    public string theText;                  //contain the new profiles name
+    public GameObject newNameTextBox;       //contains the text box
+    public GameObject newProfileName;       //holds the profiles name
     public GameObject createProfileCanvas;  //create profile scene
     public GameObject viewProfileCanvas;    //view profile scene
 
@@ -23,6 +24,9 @@ public class profileButtons : MonoBehaviour
     public GameObject rightArrow2;          //change background right
     public GameObject saveProfile;          //saves profile
 
+    public GameObject addProfileButton;     //changes canvas to create profile
+
+
     //Sprites
     public GameObject avatar001;
     public GameObject avatar002;
@@ -31,9 +35,7 @@ public class profileButtons : MonoBehaviour
     public GameObject backgroundBeach;
     public GameObject backgroundMesa;
     public GameObject backgroundOcean;
-    
 
-    
 
     private int currentAvatarIndex = 0;
     private int previousAvatarIndex = 0;
@@ -47,11 +49,6 @@ public class profileButtons : MonoBehaviour
 
     //create list of backgrounds
     public GameObject[] backgroundArray = new GameObject[backgroundArrayLength];
-
-    //create list of profile class objects
-    //public profileClass[] profileList = profileClass[99];
-
-    
 
     // Start is called before the first frame update
     void Start()
@@ -69,14 +66,11 @@ public class profileButtons : MonoBehaviour
         createProfileCanvas.SetActive(true);
         viewProfileCanvas.SetActive(false);
 
-        //print("Background List Length: " + backgroundArrayLength);
-        //print("Current background List Index: " + currentBackgroundIndex);
     }
 
     // Update is called once per frame
     void Update()
     {
-        //print("Current background List Index: " + currentBackgroundIndex);
         avatarArray[previousAvatarIndex].SetActive(false);
         avatarArray[currentAvatarIndex].SetActive(true);
         backgroundArray[previousBackgroundIndex].SetActive(false);
@@ -132,7 +126,7 @@ public class profileButtons : MonoBehaviour
     //resets profile creation canvas to default values
     public void resetCanvas()
     {
-        theTextBox.GetComponent<TMP_InputField>().text = "";
+        newNameTextBox.GetComponent<TMP_InputField>().text = "";
         previousAvatarIndex = currentAvatarIndex;
         currentAvatarIndex = 0;
         previousBackgroundIndex = currentBackgroundIndex;
@@ -140,23 +134,31 @@ public class profileButtons : MonoBehaviour
         
     }
 
-    //delete current profile
-    public void deleteProfile(profileDisplay tempList)
+    //add a new profile
+    public void addProfile()
     {
-        int index = tempList.getIndex;
-        //int profileList = tempObject.getProfileIndex();
-        profileList.Remove(profileList[index]);
-        print("deleted profile");
+        //switch canvases
+        createProfileCanvas.SetActive(true);
+        viewProfileCanvas.SetActive(false);
+    }
+
+    //delete current profile
+    public void deleteProfile()
+    {
+        if(numOfProfiles > 0)
+        {
+            profileList.RemoveAt(profileIndex);
+            numOfProfiles -= 1;
+            print("deleted profile");
+        }
+        else
+            print("no profiles to delete");
     }
 
     //save profile button
     public void saveProfileButton()
     {
-        theText = ourNote.GetComponent<TMP_Text>().text;
-        // print("Name: " + theText);
-        // print("Avatar Index: " + currentAvatarIndex);
-        // print("Background Index: " + currentBackgroundIndex);
-
+        theText = newProfileName.GetComponent<TMP_Text>().text;
 
         ProfileClass tempProfile = new ProfileClass(theText, currentAvatarIndex, currentBackgroundIndex);
 
@@ -164,21 +166,8 @@ public class profileButtons : MonoBehaviour
         int testAvatar = tempProfile.getAvatar();
         int testBackground = tempProfile.getBackground();
 
-        //print("Name: " + testName);
-        //print("Avatar Index: " + testAvatar);
-        //print("Background Index: " + testBackground);
-
-
-
         profileList.Add(tempProfile);                   //append new profile to list
-
-        // int count = 0;
-        // foreach(ProfileClass test in profileList)         //print name of each profile
-        // {
-        //     string name = test.getName();
-        //     print("Profile Names: " + name);
-        //     count += 1;
-        // }
+        numOfProfiles += 1;                             //add 1 to count of profiles
 
         //reset canvas
         resetCanvas();
@@ -187,6 +176,5 @@ public class profileButtons : MonoBehaviour
         viewProfileCanvas.SetActive(true);
         createProfileCanvas.SetActive(false);
         
-
     }
 }
