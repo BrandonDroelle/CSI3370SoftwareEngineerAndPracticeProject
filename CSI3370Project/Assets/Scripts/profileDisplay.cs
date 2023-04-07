@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class profileDisplay : MonoBehaviour
 {
-    private GameObject
+    
 
 
     // Start is called before the first frame update
