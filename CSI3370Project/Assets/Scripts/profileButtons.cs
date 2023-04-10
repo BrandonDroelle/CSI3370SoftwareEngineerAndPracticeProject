@@ -19,6 +19,7 @@ public class profileButtons : MonoBehaviour
     public GameObject newProfileName;       //holds the profiles name
     public GameObject createProfileCanvas;  //create profile scene
     public GameObject viewProfileCanvas;    //view profile scene
+    public GameObject visualCanvas;         //background & avatar
 
     //Buttons
     public GameObject leftArrow1;           //change avatar left
@@ -69,6 +70,7 @@ public class profileButtons : MonoBehaviour
         //set canvases
         createProfileCanvas.SetActive(true);
         viewProfileCanvas.SetActive(false);
+        visualCanvas.SetActive(true);
 
         //load data
         //profileList = PlayerPrefs.GetList("profileObjects");
@@ -160,6 +162,12 @@ public class profileButtons : MonoBehaviour
             profileList.RemoveAt(profileIndex);     //removes profile object at current index
             profileNames.RemoveAt(profileIndex);    //removes profile name at current index
             numOfProfiles -= 1;                     //removes 1 from count of total profiles
+
+            //these 3 lines reset the dropdown & select the previous option
+            var dropdown = dropdownMenu.GetComponent<TMP_Dropdown>();
+            dropdown.value -= 1;
+            fillDropdown();
+
             print("deleted profile");
         }
         else
@@ -193,6 +201,8 @@ public class profileButtons : MonoBehaviour
     {
         print("in dropdownItemSelected");
         int index = dropdown.value;
+        
+        dropdown.RefreshShownValue();       //refreshes the value to whatever is now selected
 
         updateViewProfile(index);
     }
@@ -228,8 +238,11 @@ public class profileButtons : MonoBehaviour
 
     public void updateViewProfile(int index)
     {
+        avatarArray[currentAvatarIndex].SetActive(false);               //hides the soon-to-be previous avatar
+        backgroundArray[currentBackgroundIndex].SetActive(false);       //hides the soon-to-be previous background
         currentBackgroundIndex = profileList[index].getBackground();
         currentAvatarIndex = profileList[index].getAvatar();
+        profileIndex = index;                                           //sets the profileIndex to the current index
     }
 
     //save data
