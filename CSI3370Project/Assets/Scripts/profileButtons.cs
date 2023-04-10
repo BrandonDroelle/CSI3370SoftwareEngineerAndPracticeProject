@@ -20,6 +20,8 @@ public class profileButtons : MonoBehaviour
     public GameObject createProfileCanvas;  //create profile scene
     public GameObject viewProfileCanvas;    //view profile scene
 
+    public bool profileDeleted = false;
+
     //Buttons
     public GameObject leftArrow1;           //change avatar left
     public GameObject rightArrow1;          //change avatar right
@@ -39,24 +41,39 @@ public class profileButtons : MonoBehaviour
     public GameObject backgroundMesa;
     public GameObject backgroundOcean;
 
+    public GameObject avatar001V;
+    public GameObject avatar002V;
+    public GameObject backgroundGrassV;
+    public GameObject backgroundHillsV;
+    public GameObject backgroundBeachV;
+    public GameObject backgroundMesaV;
+    public GameObject backgroundOceanV;
+
 
     private int currentAvatarIndex = 0;
     private int previousAvatarIndex = 0;
     private int currentBackgroundIndex = 0;
     private int previousBackgroundIndex = 0;
+
+    public int currentAvatarIndexV = 0;
+    public int previousAvatarIndexV = 0;
+    public int currentBackgroundIndexV = 0;
+    public int previousBackgroundIndexV = 0;
+    
     private static int avatarArrayLength = 2;
     private static int backgroundArrayLength = 5;
 
     //create list of avatars
     public GameObject[] avatarArray = new GameObject[avatarArrayLength];
+    public GameObject[] avatarArrayV = new GameObject[avatarArrayLength];
 
     //create list of backgrounds
     public GameObject[] backgroundArray = new GameObject[backgroundArrayLength];
+    public GameObject[] backgroundArrayV = new GameObject[backgroundArrayLength];
 
     // Start is called before the first frame update
     void Start()
     {
-        print("start program");
         //initialize sprites
         avatarArray[0] = avatar001;
         avatarArray[1] = avatar002;
@@ -65,6 +82,14 @@ public class profileButtons : MonoBehaviour
         backgroundArray[2] = backgroundBeach;
         backgroundArray[3] = backgroundMesa;
         backgroundArray[4] = backgroundOcean;
+
+        avatarArrayV[0] = avatar001V;
+        avatarArrayV[1] = avatar002V;
+        backgroundArrayV[0] = backgroundGrassV;
+        backgroundArrayV[1] = backgroundHillsV;
+        backgroundArrayV[2] = backgroundBeachV;
+        backgroundArrayV[3] = backgroundMesaV;
+        backgroundArrayV[4] = backgroundOceanV;
 
         //set canvases
         createProfileCanvas.SetActive(true);
@@ -79,10 +104,17 @@ public class profileButtons : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        //updates sprite objects
         avatarArray[previousAvatarIndex].SetActive(false);
         avatarArray[currentAvatarIndex].SetActive(true);
         backgroundArray[previousBackgroundIndex].SetActive(false);
         backgroundArray[currentBackgroundIndex].SetActive(true);
+
+        avatarArrayV[previousAvatarIndexV].SetActive(false);
+        avatarArrayV[currentAvatarIndexV].SetActive(true);
+        backgroundArrayV[previousBackgroundIndexV].SetActive(false);
+        backgroundArrayV[currentBackgroundIndexV].SetActive(true);
+
     }
 
     //change avatar index
@@ -160,7 +192,11 @@ public class profileButtons : MonoBehaviour
             profileList.RemoveAt(profileIndex);     //removes profile object at current index
             profileNames.RemoveAt(profileIndex);    //removes profile name at current index
             numOfProfiles -= 1;                     //removes 1 from count of total profiles
-            print("deleted profile");
+            profileIndex = 0;                       //set profile index to 0
+            profileDeleted = true;                  //set profile deleted to true to avoid index out of range when updating the canvas
+            //print("deleted profile");
+            fillDropdown();                         //updates the dropdown menu
+            
         }
         else
             print("no profiles to delete");
@@ -169,11 +205,11 @@ public class profileButtons : MonoBehaviour
     //fill drop down with list of profile names
     public void fillDropdown()
     {
-        print("in fillDropdown");
+        //print("in fillDropdown");
         //initialize drop down menu
         var dropdown = dropdownMenu.GetComponent<TMP_Dropdown>();
 
-        print("dropdown object created");
+        //print("dropdown object created");
         //clear dropdown
         dropdown.options.Clear();
 
@@ -184,23 +220,34 @@ public class profileButtons : MonoBehaviour
 
         dropdownItemSelected(dropdown);
 
-        dropdown.onValueChanged.AddListener(delegate { dropdownItemSelected(dropdown);});
+        //dropdown.onValueChanged.AddListener(delegate { dropdownItemSelected(dropdown);});
 
     }
 
     //change dropdown selection to name of item in list
-    void dropdownItemSelected(TMP_Dropdown dropdown)
+    public void dropdownItemSelected(TMP_Dropdown dropdown)
     {
-        print("in dropdownItemSelected");
-        int index = dropdown.value;
 
-        updateViewProfile(index);
+        int index = 0;
+
+        //print("in dropdownItemSelected");
+        if (profileDeleted == false)
+        {
+            index = dropdown.value;
+        }
+        else
+        {
+            index = 0;
+        }
+        profileIndex = index;               //update global index for current profile
+
+        updateViewProfile(index, dropdown);
     }
 
     //save profile button
     public void saveProfileButton()
     {
-        print("save profile button clicked");
+        //print("save profile button clicked");
         //gets name of profile from textbox
         theText = newProfileName.GetComponent<TMP_Text>().text;
         //creates new profile class object
@@ -215,7 +262,7 @@ public class profileButtons : MonoBehaviour
 
         //update dropdown
         fillDropdown();
-        print("out of fillDropdown");
+        //print("out of fillDropdown");
 
         //save data
         saveData();
@@ -226,10 +273,34 @@ public class profileButtons : MonoBehaviour
         
     }
 
-    public void updateViewProfile(int index)
+    public void updateViewProfile(int index, TMP_Dropdown dropdown)
     {
-        currentBackgroundIndex = profileList[index].getBackground();
-        currentAvatarIndex = profileList[index].getAvatar();
+        //print("update view profile");
+
+        //update sprites
+        if(numOfProfiles == 0)
+        {
+            previousBackgroundIndexV = currentBackgroundIndexV;
+            currentBackgroundIndexV = 0;
+            previousAvatarIndexV = currentAvatarIndexV;
+            currentAvatarIndexV = 0;
+            dropdown.captionText.text = "Hit + to Create Profile";
+            //dropdown.options.Add(new TMP_Dropdown.OptionData() { text = "Hit + to Create Profile"});
+
+        }
+        else
+        {
+            previousBackgroundIndexV = currentBackgroundIndexV;
+            currentBackgroundIndexV = profileList[index].getBackground();
+            previousAvatarIndexV = currentAvatarIndexV;
+            currentAvatarIndexV = profileList[index].getAvatar();
+            string currentProfileName = profileList[index].getName();
+            //update label text
+            dropdown.captionText.text = currentProfileName;
+        }
+
+        //reset delelted profile
+        profileDeleted = false;
     }
 
     //save data
