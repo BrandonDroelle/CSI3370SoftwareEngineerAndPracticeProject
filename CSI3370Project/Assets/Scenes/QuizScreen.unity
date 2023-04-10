@@ -827,7 +827,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &196943507
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1445,13 +1445,7 @@ MonoBehaviour:
   m_ItemImage: {fileID: 0}
   m_Value: 0
   m_Options:
-    m_Options:
-    - m_Text: Option A
-      m_Image: {fileID: 0}
-    - m_Text: Option B
-      m_Image: {fileID: 0}
-    - m_Text: Option C
-      m_Image: {fileID: 0}
+    m_Options: []
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls: []
@@ -1538,8 +1532,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bba7386564078f14e9b98f4978c4d722, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  profileNames: []
   profileIndex: 0
   numOfProfiles: 0
+  dropdownMenu: {fileID: 369358428}
   theText: 
   newNameTextBox: {fileID: 645607357}
   newProfileName: {fileID: 180730285}
@@ -2580,7 +2576,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Option A
+  m_text: 
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -4369,7 +4365,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &1901359654
 MonoBehaviour:
   m_ObjectHideFlags: 0
