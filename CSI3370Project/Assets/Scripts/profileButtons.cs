@@ -1,3 +1,4 @@
+//main
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -8,20 +9,27 @@ using System.IO;
 public class profileButtons : MonoBehaviour
 {
     //public attributes
-    public List<ProfileClass> profileList = new List<ProfileClass>();  //creates a list of profileClass objects
-    //public profileListWrapper profileListHolder;
-    public List<string> profileNames;       //creates list of profile names
-    public int profileIndex;                //holds index for current class
-    public int numOfProfiles;               //counts number of profiles
+    public List<ProfileClass> profileList = new List<ProfileClass>();   //creates a list of profileClass objects
+    public List<string> profileNames = new List<string>();              //creates list of profile names
+    public int numOfNames;                                              //saves the length of names list
+    public int profileIndex = 0;            //holds index for current class
+    public int numOfProfiles = 0;           //counts number of profiles
 
     public GameObject dropdownMenu;         //contains the dropdown menu
+    public GameObject viewProfileTitle;     //contains title in view profile screen
 
     public string theText;                  //contain the new profiles name
+    public string headText;                 //contains text for the head data
+    public string torsoText;                //contains text for the torso
+    public string legText;                  //conmtains text for the legs
+
     public GameObject newNameTextBox;       //contains the text box
     public GameObject newProfileName;       //holds the profiles name
     public GameObject createProfileCanvas;  //create profile scene
     public GameObject viewProfileCanvas;    //view profile scene
-    public GameObject visualCanvas;         //background & avatar
+    public GameObject textBoxTypeTitle;     //display current text box info type
+
+    public bool profileDeleted = false;     //sets flag for profile deletion
 
     //Buttons
     public GameObject leftArrow1;           //change avatar left
@@ -32,6 +40,10 @@ public class profileButtons : MonoBehaviour
 
     public GameObject addProfileButton;     //changes canvas to create profile
 
+    public GameObject finishTextButton;     //closes text box
+    public GameObject editHeadSizes;        //opens text box for head sizes
+    public GameObject editTorsoSizes;       //opens text box for torso sizes
+    public GameObject editLegSizes;         //opens text box for leg sizes
 
     //Sprites
     public GameObject avatar001;
@@ -42,24 +54,47 @@ public class profileButtons : MonoBehaviour
     public GameObject backgroundMesa;
     public GameObject backgroundOcean;
 
+    public GameObject avatar001V;
+    public GameObject avatar002V;
+    public GameObject backgroundGrassV;
+    public GameObject backgroundHillsV;
+    public GameObject backgroundBeachV;
+    public GameObject backgroundMesaV;
+    public GameObject backgroundOceanV;
+
+    //text boxes
+    public GameObject headTextBox;
+    public GameObject torsoTextBox;
+    public GameObject legTextBox;
+    //text in text boxes
+    public GameObject headtxt;
+    public GameObject torsotxt;
+    public GameObject legtxt;
 
     private int currentAvatarIndex = 0;
     private int previousAvatarIndex = 0;
     private int currentBackgroundIndex = 0;
     private int previousBackgroundIndex = 0;
+
+    public int currentAvatarIndexV = 0;
+    public int previousAvatarIndexV = 0;
+    public int currentBackgroundIndexV = 0;
+    public int previousBackgroundIndexV = 0;
+    
     private static int avatarArrayLength = 2;
     private static int backgroundArrayLength = 5;
 
     //create list of avatars
     public GameObject[] avatarArray = new GameObject[avatarArrayLength];
+    public GameObject[] avatarArrayV = new GameObject[avatarArrayLength];
 
     //create list of backgrounds
     public GameObject[] backgroundArray = new GameObject[backgroundArrayLength];
+    public GameObject[] backgroundArrayV = new GameObject[backgroundArrayLength];
 
     // Start is called before the first frame update
     void Start()
     {
-        print("start program");
         //initialize sprites
         avatarArray[0] = avatar001;
         avatarArray[1] = avatar002;
@@ -69,27 +104,113 @@ public class profileButtons : MonoBehaviour
         backgroundArray[3] = backgroundMesa;
         backgroundArray[4] = backgroundOcean;
 
-        //set canvases
-        createProfileCanvas.SetActive(false);
-        viewProfileCanvas.SetActive(true);
-        visualCanvas.SetActive(true);
+        avatarArrayV[0] = avatar001V;
+        avatarArrayV[1] = avatar002V;
+        backgroundArrayV[0] = backgroundGrassV;
+        backgroundArrayV[1] = backgroundHillsV;
+        backgroundArrayV[2] = backgroundBeachV;
+        backgroundArrayV[3] = backgroundMesaV;
+        backgroundArrayV[4] = backgroundOceanV;
 
         //load data
-        //profileList = PlayerPrefs.GetList("profileObjects");
-        //profileNameList = PlayerPrefs.GetList("profileNames");
         loadData();
+        //update view profile screen
+        fillDropdown();
 
-        //dropdownMenu.GetComponent<TMP_Dropdown>().RefreshShownValue();
-        fillDropdown();                     //for when it loads ViewProfileCanvas first - it fills the dropdown with the loaded data
+        //set canvases
+        if(numOfProfiles < 1)
+        {
+            createProfileCanvas.SetActive(true);
+            viewProfileCanvas.SetActive(false);
+        }
+        else
+        {
+            createProfileCanvas.SetActive(false);
+            viewProfileCanvas.SetActive(true);
+        }
+
+    }
+
+    //save data
+    public void saveData()
+    {
+        string profileListSave = Application.persistentDataPath + "/profileList.json";
+        List<string> profileListStrings = new List<string>();
+        foreach (ProfileClass profile in profileList)
+        {
+            string profileJSON = JsonUtility.ToJson(profile);
+            profileListStrings.Add(profileJSON);
+        }
+        string profileListJSON = JsonUtility.ToJson(new JSONListWrapper<string>(profileListStrings));
+
+        File.WriteAllText(profileListSave, profileListJSON);
+
+        string profileNamesSave = Application.persistentDataPath + "/profileNames.json";
+        string profileNamesJSON = JsonUtility.ToJson(new JSONListWrapper<string>(profileNames));
+
+        File.WriteAllText(profileNamesSave, profileNamesJSON);
+
+        PlayerPrefs.SetInt("profileIndex", profileIndex);
+        PlayerPrefs.SetInt("numOfProfiles", numOfProfiles);
+        
+    }
+
+    public void loadData()
+    {
+        //bottom two lines store in PlayerPrefs
+        profileIndex = PlayerPrefs.GetInt("profileIndex", 0);
+        numOfProfiles = PlayerPrefs.GetInt("numOfProfiles", 0);
+
+        string profileListSave = Application.persistentDataPath + "/profileList.json";
+
+        if (File.Exists(profileListSave))
+        {
+            string profileListJSON = File.ReadAllText(profileListSave);
+            profileList = new List<ProfileClass>();
+            List<string> profileListStrings = JsonUtility.FromJson<JSONListWrapper<string>>(profileListJSON).list;
+
+            foreach (string profileJSON in profileListStrings)
+            {
+                ProfileClass profile = JsonUtility.FromJson<ProfileClass>(profileJSON);
+                profileList.Add(profile);
+            }
+
+        } else
+        {
+            profileList = new List<ProfileClass>();
+            profileIndex = 0;
+            numOfProfiles = 0;
+        }
+
+        string profileNamesSave = Application.persistentDataPath + "/profileNames.json";
+
+        if (File.Exists(profileNamesSave))
+        {
+            string profileNamesJSON = File.ReadAllText(profileNamesSave);
+            profileNames = JsonUtility.FromJson<JSONListWrapper<string>>(profileNamesJSON).list;
+        } else
+        {
+            profileNames = new List<string>();
+            profileIndex = 0;
+            numOfProfiles = 0;
+        }
+
     }
 
     // Update is called once per frame
     void Update()
     {
+        //updates sprite objects
         avatarArray[previousAvatarIndex].SetActive(false);
         avatarArray[currentAvatarIndex].SetActive(true);
         backgroundArray[previousBackgroundIndex].SetActive(false);
         backgroundArray[currentBackgroundIndex].SetActive(true);
+
+        avatarArrayV[previousAvatarIndexV].SetActive(false);
+        avatarArrayV[currentAvatarIndexV].SetActive(true);
+        backgroundArrayV[previousBackgroundIndexV].SetActive(false);
+        backgroundArrayV[currentBackgroundIndexV].SetActive(true);
+
     }
 
     //change avatar index
@@ -138,6 +259,103 @@ public class profileButtons : MonoBehaviour
         }
     }
 
+    //turn off text boxes
+    public void resetTextBoxes()
+    {
+        //reset text boxes
+        finishTextButton.SetActive(false);
+        headTextBox.SetActive(false);
+        torsoTextBox.SetActive(false);
+        legTextBox.SetActive(false);
+        textBoxTypeTitle.SetActive(false);
+        viewProfileTitle.SetActive(true);
+
+    }
+
+    //save text from text boxes
+    public void saveText()
+    {
+        //update profile class object
+        headText = headtxt.GetComponent<TMP_Text>().text;
+        profileList[profileIndex].setHeadInfo(headText);
+
+        torsoText = torsotxt.GetComponent<TMP_Text>().text;
+        profileList[profileIndex].setTorsoInfo(torsoText);
+
+        legText = legtxt.GetComponent<TMP_Text>().text;
+        profileList[profileIndex].setLegInfo(legText);
+
+        //save data
+        saveData();
+    }
+
+    //load text boxes
+    public void loadText()
+    {
+        if(numOfProfiles == 0)
+        {
+            headTextBox.GetComponent<TMP_InputField>().text = "";
+            torsoTextBox.GetComponent<TMP_InputField>().text = "";
+            legTextBox.GetComponent<TMP_InputField>().text = "";
+        }
+        else
+        {
+            headTextBox.GetComponent<TMP_InputField>().text = profileList[profileIndex].getHeadInfo();
+            torsoTextBox.GetComponent<TMP_InputField>().text = profileList[profileIndex].getTorsoInfo();
+            legTextBox.GetComponent<TMP_InputField>().text = profileList[profileIndex].getLegInfo();
+        }
+        
+    }
+
+    //edit head size text box
+    public void editHeadSizeData()
+    {
+        if(numOfProfiles > 0)
+        {
+            //set title
+            textBoxTypeTitle.GetComponent<TMP_Text>().text = "Head";
+            textBoxTypeTitle.SetActive(true);
+            finishTextButton.SetActive(true);
+            headTextBox.SetActive(true);
+            viewProfileTitle.SetActive(false);
+
+            //load text
+            headTextBox.GetComponent<TMP_InputField>().text = profileList[profileIndex].getHeadInfo();
+        }
+    }
+
+    //edit torso size text box
+    public void editTorsoSizeData()
+    {
+        if(numOfProfiles > 0)
+        {
+            textBoxTypeTitle.GetComponent<TMP_Text>().text = "Torso";
+            textBoxTypeTitle.SetActive(true);
+            finishTextButton.SetActive(true);
+            torsoTextBox.SetActive(true);
+            viewProfileTitle.SetActive(false);
+
+            //load text
+            torsoTextBox.GetComponent<TMP_InputField>().text = profileList[profileIndex].getTorsoInfo();
+        }
+    }
+
+    //edit leg size text box
+    public void editLegSizeData()
+    {
+        if(numOfProfiles > 0)
+        {
+            textBoxTypeTitle.GetComponent<TMP_Text>().text = "Leg";
+            textBoxTypeTitle.SetActive(true);
+            finishTextButton.SetActive(true);
+            legTextBox.SetActive(true);
+            viewProfileTitle.SetActive(false);
+
+            //load text
+            legTextBox.GetComponent<TMP_InputField>().text = profileList[profileIndex].getLegInfo();
+        }
+    }
+
     //resets profile creation canvas to default values
     public void resetCanvas()
     {
@@ -167,15 +385,10 @@ public class profileButtons : MonoBehaviour
             profileList.RemoveAt(profileIndex);     //removes profile object at current index
             profileNames.RemoveAt(profileIndex);    //removes profile name at current index
             numOfProfiles -= 1;                     //removes 1 from count of total profiles
-
-            //these 3 lines reset the dropdown & select the previous option
-            var dropdown = dropdownMenu.GetComponent<TMP_Dropdown>();
-            dropdown.value -= 1;
-            fillDropdown();
-
-            saveData();
-
-            print("deleted profile");
+            profileIndex = 0;                       //set profile index to 0
+            profileDeleted = true;                  //set profile deleted to true to avoid index out of range when updating the canvas
+            fillDropdown();                         //updates the dropdown menu
+            saveData();                             //updates save data on delete profile
         }
         else
             print("no profiles to delete");
@@ -184,11 +397,9 @@ public class profileButtons : MonoBehaviour
     //fill drop down with list of profile names
     public void fillDropdown()
     {
-        print("in fillDropdown");
         //initialize drop down menu
         var dropdown = dropdownMenu.GetComponent<TMP_Dropdown>();
 
-        print("dropdown object created");
         //clear dropdown
         dropdown.options.Clear();
 
@@ -199,29 +410,40 @@ public class profileButtons : MonoBehaviour
 
         dropdownItemSelected(dropdown);
 
-        dropdown.onValueChanged.AddListener(delegate { dropdownItemSelected(dropdown);});
+        //reset text boxes
+        resetTextBoxes();
 
     }
 
     //change dropdown selection to name of item in list
-    void dropdownItemSelected(TMP_Dropdown dropdown)
+    public void dropdownItemSelected(TMP_Dropdown dropdown)
     {
-        print("in dropdownItemSelected");
-        int index = dropdown.value;
-        
-        dropdown.RefreshShownValue();       //refreshes the value to whatever is now selected
+        int index = 0;
 
-        updateViewProfile(index);
+        if (profileDeleted == false)
+        {
+            index = dropdown.value;
+        }
+        else
+        {
+            index = 0;
+        }
+        profileIndex = index;               //update global index for current profile
+
+        updateViewProfile(index, dropdown);
+
+        //reset text boxes
+        resetTextBoxes();
+        loadText();
     }
 
     //save profile button
     public void saveProfileButton()
     {
-        print("save profile button clicked");
         //gets name of profile from textbox
         theText = newProfileName.GetComponent<TMP_Text>().text;
         //creates new profile class object
-        ProfileClass tempProfile = new ProfileClass(theText, currentAvatarIndex, currentBackgroundIndex);
+        ProfileClass tempProfile = new ProfileClass(theText, currentAvatarIndex, currentBackgroundIndex, "", "", "");
 
         profileList.Add(tempProfile);                   //append new profile to list
         profileNames.Add(theText);                      //append name of profile to list of names
@@ -232,7 +454,6 @@ public class profileButtons : MonoBehaviour
 
         //update dropdown
         fillDropdown();
-        print("out of fillDropdown");
 
         //save data
         saveData();
@@ -243,104 +464,37 @@ public class profileButtons : MonoBehaviour
         
     }
 
-    public void updateViewProfile(int index)
+    public void updateViewProfile(int index, TMP_Dropdown dropdown)
     {
-        avatarArray[currentAvatarIndex].SetActive(false);               //hides the soon-to-be previous avatar
-        backgroundArray[currentBackgroundIndex].SetActive(false);       //hides the soon-to-be previous background
-        currentBackgroundIndex = profileList[index].getBackground();
-        currentAvatarIndex = profileList[index].getAvatar();
-        profileIndex = index;                                           //sets the profileIndex to the current index
+        //update sprites
+        if(numOfProfiles == 0)
+        {
+            previousBackgroundIndexV = currentBackgroundIndexV;
+            currentBackgroundIndexV = 0;
+            previousAvatarIndexV = currentAvatarIndexV;
+            currentAvatarIndexV = 0;
+            dropdown.captionText.text = "Hit + to Create Profile";
+
+        }
+        else
+        {
+            previousBackgroundIndexV = currentBackgroundIndexV;
+            currentBackgroundIndexV = profileList[index].getBackground();
+            previousAvatarIndexV = currentAvatarIndexV;
+            currentAvatarIndexV = profileList[index].getAvatar();
+            string currentProfileName = profileList[index].getName();
+            //update label text
+            dropdown.captionText.text = currentProfileName;
+        }
+        //reset delelted profile
+        profileDeleted = false;
     }
 
-    //save data
-    public void saveData()
+    [System.Serializable]
+    public class JSONListWrapper<T>
     {
-        
-        string profileListSave = Application.persistentDataPath + "/profileList.json";
-        List<string> profileListStrings = new List<string>();
-        foreach (ProfileClass profile in profileList)
-        {
-            string profileJSON = JsonUtility.ToJson(profile);
-            //print(profileJSON);
-            profileListStrings.Add(profileJSON);
-        }
-        string profileListJSON = JsonUtility.ToJson(new JSONListWrapper<string>(profileListStrings));
-        //print(profileListSave);
-        //print(profileListJSON);
+        public List<T> list;
+        public JSONListWrapper(List<T> profileList) => this.list = profileList;
 
-        //print(JsonUtility.FromJson<JSONListWrapper<string>>(profileListJSON).list[0]);
-
-        File.WriteAllText(profileListSave, profileListJSON);
-
-        string profileNamesSave = Application.persistentDataPath + "/profileNames.json";
-        string profileNamesJSON = JsonUtility.ToJson(new JSONListWrapper<string>(profileNames));
-        print(profileNamesSave);
-        print(profileNamesJSON);
-
-        
-
-        File.WriteAllText(profileNamesSave, profileNamesJSON);
-
-        PlayerPrefs.SetInt("profileIndex", profileIndex);
-        PlayerPrefs.SetInt("numOfProfiles", numOfProfiles);
     }
-
-    public void loadData()
-    {
-        //bottom two lines store in PlayerPrefs
-        profileIndex = PlayerPrefs.GetInt("profileIndex", 0);
-        numOfProfiles = PlayerPrefs.GetInt("numOfProfiles", 0);
-
-        
-        string profileListSave = Application.persistentDataPath + "/profileList.json";
-        //print(profileListSave);
-
-        if (File.Exists(profileListSave))
-        {
-            string profileListJSON = File.ReadAllText(profileListSave);
-            //print(profileListJSON);
-            profileList = new List<ProfileClass>();
-            List<string> profileListStrings = JsonUtility.FromJson<JSONListWrapper<string>>(profileListJSON).list;
-
-            foreach (string profileJSON in profileListStrings)
-            {
-                ProfileClass profile = JsonUtility.FromJson<ProfileClass>(profileJSON);
-                
-                profileList.Add(profile);
-            }
-
-            
-        } else
-        {
-            
-            profileList = new List<ProfileClass>();
-            profileIndex = 0;
-            numOfProfiles = 0;
-        }
-
-        string profileNamesSave = Application.persistentDataPath + "/profileNames.json";
-        //print(profileNamesSave);
-
-        if (File.Exists(profileNamesSave))
-        {
-            string profileNamesJSON = File.ReadAllText(profileNamesSave);
-            print(profileNamesJSON);
-            profileNames = JsonUtility.FromJson<JSONListWrapper<string>>(profileNamesJSON).list;
-        } else
-        {
-            profileNames = new List<string>();
-            profileIndex = 0;
-            numOfProfiles = 0;
-        }
-
-}
-
-
-}
-[System.Serializable]
-public class JSONListWrapper<T>
-{
-    public List<T> list;
-    public JSONListWrapper(List<T> profileList) => this.list = profileList;
-
 }
