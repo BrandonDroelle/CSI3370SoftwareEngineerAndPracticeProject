@@ -15,12 +15,18 @@ public class profileButtons : MonoBehaviour
     public GameObject dropdownMenu;         //contains the dropdown menu
 
     public string theText;                  //contain the new profiles name
+    public string headText;                 //contains text for the head data
+    public string torsoText;                //contains text for the torso
+    public string legText;                  //conmtains text for the legs
+
     public GameObject newNameTextBox;       //contains the text box
     public GameObject newProfileName;       //holds the profiles name
     public GameObject createProfileCanvas;  //create profile scene
     public GameObject viewProfileCanvas;    //view profile scene
+    public GameObject textBoxTypeTitle;     //display current text box info type
 
-    public bool profileDeleted = false;
+
+    public bool profileDeleted = false;     
 
     //Buttons
     public GameObject leftArrow1;           //change avatar left
@@ -31,6 +37,10 @@ public class profileButtons : MonoBehaviour
 
     public GameObject addProfileButton;     //changes canvas to create profile
 
+    public GameObject finishTextButton;     //closes text box
+    public GameObject editHeadSizes;        //opens text box for head sizes
+    public GameObject editTorsoSizes;       //opens text box for torso sizes
+    public GameObject editLegSizes;         //opens text box for leg sizes
 
     //Sprites
     public GameObject avatar001;
@@ -48,6 +58,15 @@ public class profileButtons : MonoBehaviour
     public GameObject backgroundBeachV;
     public GameObject backgroundMesaV;
     public GameObject backgroundOceanV;
+
+    //text boxes
+    public GameObject headTextBox;
+    public GameObject torsoTextBox;
+    public GameObject legTextBox;
+    //text in text boxes
+    public GameObject headtxt;
+    public GameObject torsotxt;
+    public GameObject legtxt;
 
 
     private int currentAvatarIndex = 0;
@@ -163,6 +182,80 @@ public class profileButtons : MonoBehaviour
         }
     }
 
+    //turn off text boxes
+    public void resetTextBoxes()
+    {
+        //reset text boxes
+        finishTextButton.SetActive(false);
+        headTextBox.SetActive(false);
+        torsoTextBox.SetActive(false);
+        legTextBox.SetActive(false);
+        textBoxTypeTitle.SetActive(false);
+
+    }
+
+    //save text from text boxes
+    public void saveText()
+    {
+        //update profile class object
+        headText = headtxt.GetComponent<TMP_Text>().text;
+        profileList[profileIndex].setHeadInfo(headText);
+
+        torsoText = torsotxt.GetComponent<TMP_Text>().text;
+        profileList[profileIndex].setTorsoInfo(torsoText);
+
+        legText = legtxt.GetComponent<TMP_Text>().text;
+        profileList[profileIndex].setLegInfo(legText);
+    }
+
+    //load text boxes
+    public void loadText()
+    {
+        print("in load text function");
+        print(profileIndex);
+        headTextBox.GetComponent<TMP_InputField>().text = "test";
+        torsoTextBox.GetComponent<TMP_InputField>().text = profileList[profileIndex].getTorsoInfo();
+        legTextBox.GetComponent<TMP_InputField>().text = profileList[profileIndex].getLegInfo();
+    }
+
+    //edit head size text box
+    public void editHeadSizeData()
+    {
+        //set title
+        textBoxTypeTitle.GetComponent<TMP_Text>().text = "Head";
+        textBoxTypeTitle.SetActive(true);
+        finishTextButton.SetActive(true);
+        headTextBox.SetActive(true);
+
+        //load text
+        headTextBox.GetComponent<TMP_InputField>().text = profileList[profileIndex].getHeadInfo();
+
+    }
+
+    //edit torso size text box
+    public void editTorsoSizeData()
+    {
+        textBoxTypeTitle.GetComponent<TMP_Text>().text = "Torso";
+        textBoxTypeTitle.SetActive(true);
+        finishTextButton.SetActive(true);
+        torsoTextBox.SetActive(true);
+
+        //load text
+        torsoTextBox.GetComponent<TMP_InputField>().text = profileList[profileIndex].getTorsoInfo();
+    }
+
+    //edit leg size text box
+    public void editLegSizeData()
+    {
+        textBoxTypeTitle.GetComponent<TMP_Text>().text = "Leg";
+        textBoxTypeTitle.SetActive(true);
+        finishTextButton.SetActive(true);
+        legTextBox.SetActive(true);
+
+        //load text
+        legTextBox.GetComponent<TMP_InputField>().text = profileList[profileIndex].getLegInfo();
+    }
+
     //resets profile creation canvas to default values
     public void resetCanvas()
     {
@@ -222,6 +315,9 @@ public class profileButtons : MonoBehaviour
 
         //dropdown.onValueChanged.AddListener(delegate { dropdownItemSelected(dropdown);});
 
+        //reset text boxes
+        resetTextBoxes();
+
     }
 
     //change dropdown selection to name of item in list
@@ -242,6 +338,11 @@ public class profileButtons : MonoBehaviour
         profileIndex = index;               //update global index for current profile
 
         updateViewProfile(index, dropdown);
+
+        //reset text boxes
+        resetTextBoxes();
+        loadText();
+        
     }
 
     //save profile button
@@ -251,7 +352,7 @@ public class profileButtons : MonoBehaviour
         //gets name of profile from textbox
         theText = newProfileName.GetComponent<TMP_Text>().text;
         //creates new profile class object
-        ProfileClass tempProfile = new ProfileClass(theText, currentAvatarIndex, currentBackgroundIndex);
+        ProfileClass tempProfile = new ProfileClass(theText, currentAvatarIndex, currentBackgroundIndex, "", "", "");
 
         profileList.Add(tempProfile);                   //append new profile to list
         profileNames.Add(theText);                      //append name of profile to list of names
@@ -270,6 +371,7 @@ public class profileButtons : MonoBehaviour
         //switch canvases
         viewProfileCanvas.SetActive(true);
         createProfileCanvas.SetActive(false);
+
         
     }
 
@@ -301,6 +403,7 @@ public class profileButtons : MonoBehaviour
 
         //reset delelted profile
         profileDeleted = false;
+
     }
 
     //save data
