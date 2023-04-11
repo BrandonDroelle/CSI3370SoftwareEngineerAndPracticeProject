@@ -3,14 +3,16 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using System.IO;
 
 public class profileButtons : MonoBehaviour
 {
     //public attributes
-    public List<ProfileClass> profileList = new List<ProfileClass>();   //creates a list of profileClass objects
-    public List<string> profileNames = new List<string>();              //creates list of profile names
-    public int profileIndex = 0;            //holds index for current class
-    public int numOfProfiles = 0;           //counts number of profiles
+    public List<ProfileClass> profileList = new List<ProfileClass>();  //creates a list of profileClass objects
+    //public profileListWrapper profileListHolder;
+    public List<string> profileNames;       //creates list of profile names
+    public int profileIndex;                //holds index for current class
+    public int numOfProfiles;               //counts number of profiles
 
     public GameObject dropdownMenu;         //contains the dropdown menu
 
@@ -68,14 +70,17 @@ public class profileButtons : MonoBehaviour
         backgroundArray[4] = backgroundOcean;
 
         //set canvases
-        createProfileCanvas.SetActive(true);
-        viewProfileCanvas.SetActive(false);
+        createProfileCanvas.SetActive(false);
+        viewProfileCanvas.SetActive(true);
         visualCanvas.SetActive(true);
 
         //load data
         //profileList = PlayerPrefs.GetList("profileObjects");
         //profileNameList = PlayerPrefs.GetList("profileNames");
+        loadData();
 
+        //dropdownMenu.GetComponent<TMP_Dropdown>().RefreshShownValue();
+        fillDropdown();                     //for when it loads ViewProfileCanvas first - it fills the dropdown with the loaded data
     }
 
     // Update is called once per frame
@@ -168,6 +173,8 @@ public class profileButtons : MonoBehaviour
             dropdown.value -= 1;
             fillDropdown();
 
+            saveData();
+
             print("deleted profile");
         }
         else
@@ -248,7 +255,92 @@ public class profileButtons : MonoBehaviour
     //save data
     public void saveData()
     {
-        //PlayerPrefs.SetList("profileObjects", profileList);
-        //PlayerPrefs.SetString("profileNames_count", profileNames.Count);
+        
+        string profileListSave = Application.persistentDataPath + "/profileList.json";
+        List<string> profileListStrings = new List<string>();
+        foreach (ProfileClass profile in profileList)
+        {
+            string profileJSON = JsonUtility.ToJson(profile);
+            //print(profileJSON);
+            profileListStrings.Add(profileJSON);
+        }
+        string profileListJSON = JsonUtility.ToJson(new JSONListWrapper<string>(profileListStrings));
+        //print(profileListSave);
+        //print(profileListJSON);
+
+        //print(JsonUtility.FromJson<JSONListWrapper<string>>(profileListJSON).list[0]);
+
+        File.WriteAllText(profileListSave, profileListJSON);
+
+        string profileNamesSave = Application.persistentDataPath + "/profileNames.json";
+        string profileNamesJSON = JsonUtility.ToJson(new JSONListWrapper<string>(profileNames));
+        print(profileNamesSave);
+        print(profileNamesJSON);
+
+        
+
+        File.WriteAllText(profileNamesSave, profileNamesJSON);
+
+        PlayerPrefs.SetInt("profileIndex", profileIndex);
+        PlayerPrefs.SetInt("numOfProfiles", numOfProfiles);
     }
+
+    public void loadData()
+    {
+        //bottom two lines store in PlayerPrefs
+        profileIndex = PlayerPrefs.GetInt("profileIndex", 0);
+        numOfProfiles = PlayerPrefs.GetInt("numOfProfiles", 0);
+
+        
+        string profileListSave = Application.persistentDataPath + "/profileList.json";
+        //print(profileListSave);
+
+        if (File.Exists(profileListSave))
+        {
+            string profileListJSON = File.ReadAllText(profileListSave);
+            //print(profileListJSON);
+            profileList = new List<ProfileClass>();
+            List<string> profileListStrings = JsonUtility.FromJson<JSONListWrapper<string>>(profileListJSON).list;
+
+            foreach (string profileJSON in profileListStrings)
+            {
+                ProfileClass profile = JsonUtility.FromJson<ProfileClass>(profileJSON);
+                
+                profileList.Add(profile);
+            }
+
+            
+        } else
+        {
+            
+            profileList = new List<ProfileClass>();
+            profileIndex = 0;
+            numOfProfiles = 0;
+        }
+
+        string profileNamesSave = Application.persistentDataPath + "/profileNames.json";
+        //print(profileNamesSave);
+
+        if (File.Exists(profileNamesSave))
+        {
+            string profileNamesJSON = File.ReadAllText(profileNamesSave);
+            print(profileNamesJSON);
+            profileNames = JsonUtility.FromJson<JSONListWrapper<string>>(profileNamesJSON).list;
+        } else
+        {
+            profileNames = new List<string>();
+            profileIndex = 0;
+            numOfProfiles = 0;
+        }
+
+}
+
+
+}
+[System.Serializable]
+public class JSONListWrapper<T>
+{
+    public List<T> list;
+    public JSONListWrapper(List<T> profileList) => this.list = profileList;
+
 }
