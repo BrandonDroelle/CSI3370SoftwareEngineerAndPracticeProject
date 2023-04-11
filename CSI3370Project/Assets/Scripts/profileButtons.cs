@@ -3,12 +3,14 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using System.IO;
 
 public class profileButtons : MonoBehaviour
 {
     //public attributes
     public List<ProfileClass> profileList = new List<ProfileClass>();   //creates a list of profileClass objects
     public List<string> profileNames = new List<string>();              //creates list of profile names
+    public int numOfNames;                                              //saves the length of names list
     public int profileIndex = 0;            //holds index for current class
     public int numOfProfiles = 0;           //counts number of profiles
 
@@ -115,8 +117,85 @@ public class profileButtons : MonoBehaviour
         viewProfileCanvas.SetActive(false);
 
         //load data
-        //profileList = PlayerPrefs.GetList("profileObjects");
-        //profileNameList = PlayerPrefs.GetList("profileNames");
+        loadData();
+
+    }
+
+    //save data
+    public void saveData()
+    {
+
+        string profileListSave = Application.persistentDataPath + "/profileList.json";
+        List<string> profileListStrings = new List<string>();
+        foreach (ProfileClass profile in profileList)
+        {
+            string profileJSON = JsonUtility.ToJson(profile);
+            //print(profileJSON);
+            profileListStrings.Add(profileJSON);
+        }
+        string profileListJSON = JsonUtility.ToJson(new JSONListWrapper<string>(profileListStrings));
+
+        File.WriteAllText(profileListSave, profileListJSON);
+
+        string profileNamesSave = Application.persistentDataPath + "/profileNames.json";
+        string profileNamesJSON = JsonUtility.ToJson(new JSONListWrapper<string>(profileNames));
+        print(profileNamesSave);
+        print(profileNamesJSON);
+
+
+
+        File.WriteAllText(profileNamesSave, profileNamesJSON);
+
+        PlayerPrefs.SetInt("profileIndex", profileIndex);
+        PlayerPrefs.SetInt("numOfProfiles", numOfProfiles);
+        
+    }
+
+    public void loadData()
+    {
+
+        //bottom two lines store in PlayerPrefs
+        profileIndex = PlayerPrefs.GetInt("profileIndex", 0);
+        numOfProfiles = PlayerPrefs.GetInt("numOfProfiles", 0);
+
+
+        string profileListSave = Application.persistentDataPath + "/profileList.json";
+
+        if (File.Exists(profileListSave))
+        {
+            string profileListJSON = File.ReadAllText(profileListSave);
+            profileList = new List<ProfileClass>();
+            List<string> profileListStrings = JsonUtility.FromJson<JSONListWrapper<string>>(profileListJSON).list;
+
+            foreach (string profileJSON in profileListStrings)
+            {
+                ProfileClass profile = JsonUtility.FromJson<ProfileClass>(profileJSON);
+
+                profileList.Add(profile);
+            }
+
+
+        } else
+        {
+
+            profileList = new List<ProfileClass>();
+            profileIndex = 0;
+            numOfProfiles = 0;
+        }
+
+        string profileNamesSave = Application.persistentDataPath + "/profileNames.json";
+
+        if (File.Exists(profileNamesSave))
+        {
+            string profileNamesJSON = File.ReadAllText(profileNamesSave);
+            print(profileNamesJSON);
+            profileNames = JsonUtility.FromJson<JSONListWrapper<string>>(profileNamesJSON).list;
+        } else
+        {
+            profileNames = new List<string>();
+            profileIndex = 0;
+            numOfProfiles = 0;
+        }
 
     }
 
@@ -206,6 +285,9 @@ public class profileButtons : MonoBehaviour
 
         legText = legtxt.GetComponent<TMP_Text>().text;
         profileList[profileIndex].setLegInfo(legText);
+
+        //save data
+        saveData();
     }
 
     //load text boxes
@@ -298,11 +380,9 @@ public class profileButtons : MonoBehaviour
     //fill drop down with list of profile names
     public void fillDropdown()
     {
-        //print("in fillDropdown");
         //initialize drop down menu
         var dropdown = dropdownMenu.GetComponent<TMP_Dropdown>();
 
-        //print("dropdown object created");
         //clear dropdown
         dropdown.options.Clear();
 
@@ -312,8 +392,6 @@ public class profileButtons : MonoBehaviour
         }
 
         dropdownItemSelected(dropdown);
-
-        //dropdown.onValueChanged.AddListener(delegate { dropdownItemSelected(dropdown);});
 
         //reset text boxes
         resetTextBoxes();
@@ -326,7 +404,6 @@ public class profileButtons : MonoBehaviour
 
         int index = 0;
 
-        //print("in dropdownItemSelected");
         if (profileDeleted == false)
         {
             index = dropdown.value;
@@ -348,7 +425,6 @@ public class profileButtons : MonoBehaviour
     //save profile button
     public void saveProfileButton()
     {
-        //print("save profile button clicked");
         //gets name of profile from textbox
         theText = newProfileName.GetComponent<TMP_Text>().text;
         //creates new profile class object
@@ -377,7 +453,6 @@ public class profileButtons : MonoBehaviour
 
     public void updateViewProfile(int index, TMP_Dropdown dropdown)
     {
-        //print("update view profile");
 
         //update sprites
         if(numOfProfiles == 0)
@@ -387,7 +462,6 @@ public class profileButtons : MonoBehaviour
             previousAvatarIndexV = currentAvatarIndexV;
             currentAvatarIndexV = 0;
             dropdown.captionText.text = "Hit + to Create Profile";
-            //dropdown.options.Add(new TMP_Dropdown.OptionData() { text = "Hit + to Create Profile"});
 
         }
         else
@@ -406,10 +480,12 @@ public class profileButtons : MonoBehaviour
 
     }
 
-    //save data
-    public void saveData()
+    [System.Serializable]
+    public class JSONListWrapper<T>
     {
-        //PlayerPrefs.SetList("profileObjects", profileList);
-        //PlayerPrefs.SetString("profileNames_count", profileNames.Count);
+        public List<T> list;
+        public JSONListWrapper(List<T> profileList) => this.list = profileList;
+
     }
+
 }
